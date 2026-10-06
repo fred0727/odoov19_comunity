@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_sunatfm_pe_edi_configuration_system,sunatfm.pe.edi.configuration system,model_sunatfm_pe_edi_configuration,base.group_system,1,1,1,1
+access_sunatfm_pe_edi_document_account_user,sunatfm.pe.edi.document account user,model_sunatfm_pe_edi_document,account.group_account_invoice,1,1,1,0
+access_sunatfm_pe_edi_void_wizard_account_user,sunatfm.pe.edi.void.wizard account user,model_sunatfm_pe_edi_void_wizard,account.group_account_invoice,1,1,1,1
+access_sunatfm_pe_detraction_account_user,sunatfm.pe.detraction account user,model_sunatfm_pe_detraction,account.group_account_invoice,1,0,0,0
+access_sunatfm_pe_detraction_system,sunatfm.pe.detraction system,model_sunatfm_pe_detraction,base.group_system,1,1,1,1
+access_sunatfm_pe_vehicle_stock_user,sunatfm.pe.vehicle stock user,model_sunatfm_pe_vehicle,stock.group_stock_user,1,1,1,0
+access_sunatfm_pe_vehicle_system,sunatfm.pe.vehicle system,model_sunatfm_pe_vehicle,base.group_system,1,1,1,1
+access_sunatfm_pe_gre_reference_stock_user,sunatfm.pe.gre.reference stock user,model_sunatfm_pe_gre_reference,stock.group_stock_user,1,1,1,0
+access_sunatfm_pe_gre_reference_system,sunatfm.pe.gre.reference system,model_sunatfm_pe_gre_reference,base.group_system,1,1,1,1
+access_sunatfm_pe_withholding_user,sunatfm.pe.withholding user,model_sunatfm_pe_withholding,base.group_user,1,1,1,1

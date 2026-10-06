@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sunatfm_edi_company_form" model="ir.ui.view">
+        <field name="name">res.company.form.sunatfm.edi</field>
+        <field name="model">res.company</field>
+        <field name="inherit_id" ref="base.view_company_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="sunatfm_edi" string="Facturación electrónica SUNAT" groups="base.group_system">
+                    <div class="alert alert-info" role="alert">
+                        La configuración fiscal y las credenciales SUNAT pertenecen a esta empresa.
+                    </div>
+                    <group string="Entorno y alcance">
+                        <field name="sunatfm_edi_environment" string="Ambiente CPE"/>
+                        <field name="sunatfm_edi_service_endpoint" readonly="1"/>
+                        <field name="sunatfm_edi_gre_api_endpoint" readonly="1"/>
+                        <field name="sunatfm_edi_gre_token_endpoint" readonly="1"/>
+                        <field name="sunatfm_edi_cpe_enabled"/>
+                        <field name="sunatfm_edi_gre_enabled" help="GRE no tiene ambiente Beta de emisión; el XML se valida localmente y el envío API se realiza al servicio GRE de SUNAT."/>
+                        <field name="sunatfm_edi_gre_series"/>
+                        <field name="sunatfm_edi_establishment_code"/>
+                    </group>
+                    <group string="Credenciales SUNAT" groups="base.group_system">
+                        <field name="sunatfm_edi_certificate_p12" filename="sunatfm_edi_certificate_filename"/>
+                        <field name="sunatfm_edi_certificate_filename" invisible="1"/>
+                        <field name="sunatfm_edi_certificate_password" password="True"/>
+                        <field name="sunatfm_edi_sol_user" help="Usuario SOL sin RUC; el módulo antepone automáticamente el RUC de la empresa."/>
+                        <field name="sunatfm_edi_sol_password" password="True"/>
+                        <button name="action_sunatfm_edi_validate_certificate" type="object" string="Validar certificado" class="btn-secondary"/>
+                        <field name="sunatfm_edi_certificate_subject" readonly="1"/>
+                        <field name="sunatfm_edi_certificate_serial" readonly="1"/>
+                        <field name="sunatfm_edi_certificate_expiration" readonly="1"/>
+                    </group>
+                    <group string="API SUNAT para GRE" groups="base.group_system">
+                        <field name="sunatfm_edi_gre_api_client_id"/>
+                        <field name="sunatfm_edi_gre_api_client_secret" password="True"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sunatfm_gre_sequence" model="ir.sequence">
+        <field name="name">GRE remitente</field>
+        <field name="code">sunatfm_pe_edi.gre</field>
+        <field name="implementation">no_gap</field>
+        <field name="prefix" eval="False"/>
+        <field name="padding">8</field>
+        <field name="number_increment">1</field>
+        <field name="use_date_range" eval="False"/>
+    </record>
+</odoo>

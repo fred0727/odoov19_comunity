@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sunatfm_purchaseorder_document" inherit_id="purchase.report_purchaseorder_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="replace">
+            <div class="sunatfm_report">
+                <t t-set="o" t-value="o.with_context(lang='es_PE')"/>
+                <t t-set="doc" t-value="o"/>
+                <t t-set="document_label" t-value="'ORDEN DE COMPRA'"/>
+                <t t-set="document_number" t-value="o.name or ''"/>
+                <t t-set="supplier_company" t-value="o.partner_id.commercial_partner_id"/>
+                <t t-set="supplier_contact" t-value="o.partner_id.name or supplier_company.name"/>
+                <t t-set="purchase_lines" t-value="o.order_line.filtered(lambda l: l.display_type == False and l.product_qty != 0)"/>
+                <t t-set="has_discount" t-value="any(line.discount for line in purchase_lines)"/>
+                <t t-set="tax_groups" t-value="((o.tax_totals or {}).get('subtotals') or [{}])[0].get('tax_groups', [])"/>
+                <t t-call="sunatfm_pe_edi.sunatfm_document_header"/>
+                <div class="article page sunatfm_quote" style="font-family: Arial, sans-serif; font-size: 12px; color: #111;">
+                    <style>
+                        .sunatfm_po_info { width: 100%; border: 1px solid #C9B3C2; border-radius: 8px; padding: 10px; margin-top: 14px; }
+                        .sunatfm_po_info table,
+                        .sunatfm_po_info tr,
+                        .sunatfm_po_info td { border: 0 !important; }
+                        .sunatfm_po_info { border-collapse: separate !important; border-spacing: 0 !important; }
+                        .sunatfm_po_info * { outline: 0 !important; box-shadow: none !important; }
+                        .sunatfm_po_info td { padding: 3px 5px; vertical-align: top; }
+                        .sunatfm_po_label { font-weight: bold; white-space: nowrap; width: 13%; }
+                        .sunatfm_po_lines { width: 100%; border-collapse: collapse; margin-top: 14px; }
+                        .sunatfm_po_lines th { background: #F1E8EF; border: 1px solid #C9B3C2; padding: 7px 5px; text-align: left; }
+                        .sunatfm_po_lines td { border-bottom: 1px solid #E2D9DF; padding: 7px 5px; vertical-align: top; }
+                        .sunatfm_po_right { text-align: right; }
+                        .sunatfm_po_totals { width: 38%; margin: 14px 0 0 auto; border-collapse: collapse; font-weight: bold; }
+                        .sunatfm_po_totals td { padding: 4px 6px; }
+                        .sunatfm_po_totals tr:last-child { border-top: 2px solid #714B67; }
+                        .sunatfm_po_note { border: 1px solid #aaa; border-radius: 8px; padding: 8px 12px; margin-top: 12px; }
+                    </style>
+                    <table class="sunatfm_po_info">
+                        <tr>
+                            <td class="sunatfm_po_label">PROVEEDOR</td><td t-out="supplier_company.name or ''"/>
+                            <td class="sunatfm_po_label">FECHA</td><td t-out="o.date_order.strftime('%d/%m/%Y') if o.date_order else ''"/>
+                        </tr>
+                        <tr>
+                            <td class="sunatfm_po_label">CONTACTO</td><td t-out="supplier_contact"/>
+                            <td class="sunatfm_po_label">REFERENCIA</td><td t-out="o.partner_ref or ''"/>
+                        </tr>
+                        <tr>
+                            <td class="sunatfm_po_label">RUC</td><td t-out="supplier_company.vat or ''"/>
+                            <td class="sunatfm_po_label">MONEDA</td><td t-out="o.currency_id.name == 'PEN' and 'SOLES' or o.currency_id.name"/>
+                        </tr>
+                        <tr>
+                            <td class="sunatfm_po_label">DIRECCI&#211;N</td>
+                            <td colspan="3" t-out="', '.join(filter(None, [supplier_company.street, supplier_company.street2, supplier_company.zip, supplier_company.city, supplier_company.state_id.name]))"/>
+                        </tr>
+                    </table>
+                    <table class="sunatfm_po_lines">
+                        <thead><tr><th t-att-style="'width:31%;' if has_discount else 'width:36%;'">DESCRIPCI&#211;N</th><th t-att-style="'width:8%;' if has_discount else 'width:9%;'">CANT.</th><th t-att-style="'width:9%;' if has_discount else 'width:10%;'">UM</th><th class="sunatfm_po_right" t-att-style="'width:13%;' if has_discount else 'width:15%;'">V/U</th><th t-if="has_discount" style="width:10%;" class="sunatfm_po_right">DESC.</th><th class="sunatfm_po_right" t-att-style="'width:13%;' if has_discount else 'width:14%;'">P/U</th><th class="sunatfm_po_right" t-att-style="'width:16%;' if has_discount else 'width:16%;'">IMPORTE</th></tr></thead>
+                        <tbody>
+                            <tr t-foreach="purchase_lines" t-as="line">
+                                <td t-att-style="'width:31%;' if has_discount else 'width:36%;'" t-out="line.name"/><td t-att-style="'width:8%;' if has_discount else 'width:9%;'" t-out="line.product_qty"/><td t-att-style="'width:9%;' if has_discount else 'width:10%;'" t-out="line.product_uom_id.name or ''"/>
+                                <td class="sunatfm_po_right" t-att-style="'width:13%;' if has_discount else 'width:15%;'"><span t-out="line.tax_ids.compute_all(line.price_unit, currency=o.currency_id, quantity=1).get('total_excluded', line.price_unit)" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <td t-if="has_discount" style="width:10%;" class="sunatfm_po_right" t-out="'{:.2f} %'.format(line.discount or 0.0)"/>
+                                <td class="sunatfm_po_right" t-att-style="'width:13%;' if has_discount else 'width:14%;'"><span t-out="line.price_unit * (1 - (line.discount or 0.0) / 100.0)" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                                <td class="sunatfm_po_right" t-att-style="'width:19%;' if has_discount else 'width:20%;'"><span t-out="line.price_subtotal" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="sunatfm_po_totals">
+                        <tr><td>GRAVADA</td><td class="sunatfm_po_right"><span t-out="o.amount_untaxed" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td></tr>
+                        <tr t-foreach="tax_groups" t-as="tax_group">
+                            <t t-set="group_taxes" t-value="o.env['account.tax'].browse(tax_group.get('involved_tax_ids', []))"/>
+                            <td><span t-out="tax_group.get('group_name') or 'IMPUESTO'"/><span t-if="group_taxes" t-out="' ' + str(round(abs(group_taxes[0].amount), 2)) + '%'"/></td>
+                            <td class="sunatfm_po_right"><span t-out="tax_group.get('tax_amount_currency', 0.0)" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td>
+                        </tr>
+                        <tr t-if="not tax_groups"><td>IMPUESTOS</td><td class="sunatfm_po_right"><span t-out="o.amount_tax" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td></tr>
+                        <tr><td>TOTAL</td><td class="sunatfm_po_right"><span t-out="o.amount_total" t-options="{'widget': 'monetary', 'display_currency': o.currency_id}"/></td></tr>
+                    </table>
+                    <div class="sunatfm_amount_words"><strong>IMPORTE EN LETRAS:</strong> <span t-out="o.currency_id.amount_to_text(o.amount_total).upper()"/></div>
+                    <div t-if="o.note" class="sunatfm_po_note"><strong>OBSERVACIONES:</strong> <span t-out="o.note"/></div>
+                </div>
+                <t t-call="sunatfm_pe_edi.sunatfm_document_footer"/>
+            </div>
+        </xpath>
+    </template>
+
+    <!-- Odoo utiliza este reporte distinto cuando el documento aún es una
+         solicitud de cotización (RFQ). Se reutiliza el mismo formato. -->
+    <template id="sunatfm_purchasequotation_document" inherit_id="purchase.report_purchasequotation_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="replace">
+            <t t-call="sunatfm_pe_edi.sunatfm_purchaseorder_document"/>
+        </xpath>
+    </template>
+</odoo>

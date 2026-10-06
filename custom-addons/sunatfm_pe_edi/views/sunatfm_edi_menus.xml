@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Restore the standard Odoo journal action. The uninstalled legacy
+         module left a domain on a field that does not exist in Community 19. -->
+    <record id="account.action_account_journal_form" model="ir.actions.act_window">
+        <field name="domain">[]</field>
+    </record>
+    <!--
+        The legacy localization had detached this standard customer-invoice
+        menu from Accounting, which made it appear as a second root launcher
+        named “Facturas”. Restore Odoo's standard hierarchy instead of hiding
+        the invoice action itself: invoices remain available under
+        Facturación → Clientes.
+    -->
+    <record id="account.menu_action_move_out_invoice_type" model="ir.ui.menu">
+        <field name="parent_id" ref="account.menu_finance_receivables"/>
+        <field name="active">True</field>
+        <field name="sequence">1</field>
+    </record>
+    <menuitem id="sunatfm_pe_edi_menu_root"
+              name="Facturación electrónica SUNAT"
+              parent="account.menu_finance"
+              sequence="45"
+              groups="account.group_account_user"/>
+    <menuitem id="sunatfm_pe_edi_menu_documents" name="Documentos electrónicos" parent="sunatfm_pe_edi_menu_root" action="sunatfm_pe_edi_document_action" sequence="10"/>
+    <menuitem id="sunatfm_pe_edi_menu_detraction" name="Detracciones SUNAT" parent="account.menu_finance_configuration" action="sunatfm_pe_detraction_action" sequence="46" groups="base.group_system"/>
+    <menuitem id="sunatfm_pe_edi_menu_vehicle" name="Vehículos GRE SUNAT" parent="stock.menu_stock_config_settings" action="sunatfm_vehicle_action" sequence="46" groups="stock.group_stock_user"/>
+</odoo>

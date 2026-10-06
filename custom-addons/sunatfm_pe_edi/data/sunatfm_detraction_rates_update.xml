@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="0">
+    <!--
+        Tasas vigentes del Anexo 3 según el catálogo publicado por SUNAT.
+        Este archivo actualiza bases existentes que fueron instaladas con las
+        tasas históricas del catálogo inicial.
+    -->
+    <record id="sunatfm_detraction_001" model="sunatfm.pe.detraction">
+        <field name="rate">12.0</field>
+    </record>
+    <record id="sunatfm_detraction_003" model="sunatfm.pe.detraction">
+        <field name="rate">12.0</field>
+    </record>
+    <record id="sunatfm_detraction_005" model="sunatfm.pe.detraction">
+        <field name="rate">12.0</field>
+    </record>
+    <record id="sunatfm_detraction_010" model="sunatfm.pe.detraction">
+        <field name="rate">12.0</field>
+    </record>
+</odoo>

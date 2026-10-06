@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sunatfm_stock_picking_form_gre" model="ir.ui.view">
+        <field name="name">stock.picking.form.sunatfm.gre</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_sunatfm_edi_prepare_gre" type="object"
+                        string="Generar Guía de Remisión" class="btn-secondary"
+                        invisible="picking_type_code != 'outgoing' or state == 'cancel'"
+                        groups="stock.group_stock_user"/>
+                <button name="action_sunatfm_edi_send_gre" type="object"
+                        string="Enviar a SUNAT" class="btn-primary"
+                        invisible="picking_type_code != 'outgoing' or state == 'cancel' or sunatfm_gre_edi_state in ['sent', 'accepted']"
+                        groups="stock.group_stock_user"/>
+                <button name="action_sunatfm_edi_check_gre_status" type="object"
+                        string="Consultar SUNAT" class="btn-secondary"
+                        invisible="picking_type_code != 'outgoing' or sunatfm_gre_edi_state != 'sent' or not sunatfm_gre_ticket"
+                        groups="stock.group_stock_user"/>
+            </xpath>
+            <xpath expr="//sheet/notebook" position="inside">
+                <page name="sunatfm_gre" string="Guía de remisión SUNAT">
+                    <group>
+                    <group string="Traslado">
+                        <field name="sunatfm_gre_number" readonly="1"/>
+                            <field name="sunatfm_gre_motivo_traslado"/>
+                            <field name="sunatfm_gre_modalidad"/>
+                            <field name="sunatfm_gre_fecha_inicio"/>
+                            <field name="sunatfm_gre_numero_bultos"/>
+                            <field name="sunatfm_gre_peso_bruto"/>
+                            <field name="sunatfm_gre_unidad_peso"/>
+                        </group>
+                    </group>
+                    <group string="Transporte" invisible="sunatfm_gre_modalidad != '02'">
+                        <field name="sunatfm_gre_vehicle_id"/>
+                        <field name="sunatfm_gre_conductor_id"/>
+                        <field name="sunatfm_gre_conductor_dni"/>
+                        <field name="sunatfm_gre_conductor_licencia"/>
+                        <field name="sunatfm_gre_vehiculo_placa"/>
+                    </group>
+                    <group string="Transporte público" invisible="sunatfm_gre_modalidad != '01'">
+                        <field name="sunatfm_gre_transportista_id"/>
+                    </group>
+                    <group string="Documentos relacionados" colspan="2">
+                        <field name="sunatfm_gre_reference_ids" nolabel="1" colspan="2">
+                            <list editable="bottom">
+                                <field name="sequence" widget="handle"/>
+                                <field name="document_type"/>
+                                <field name="document_number"/>
+                                <field name="issuer_ruc" required="1"/>
+                                <field name="document_date"/>
+                                <field name="description"/>
+                            </list>
+                        </field>
+                    </group>
+                    <group string="Observaciones" colspan="2">
+                        <field name="sunatfm_gre_observations" nolabel="1" colspan="2"
+                               required="sunatfm_gre_motivo_traslado == '13'"
+                               placeholder="Describa obligatoriamente el motivo cuando seleccione Otros."/>
+                    </group>
+                    <group string="Facturación electrónica SUNAT">
+                        <field name="sunatfm_gre_edi_state" widget="badge"/>
+                        <field name="sunatfm_gre_response_code"/>
+                        <field name="sunatfm_gre_ticket"/>
+                        <field name="sunatfm_gre_error_message" string="Motivo del rechazo / error"
+                               widget="text" rows="4" colspan="2"
+                               placeholder="Se mostrará aquí el motivo devuelto por SUNAT o el error técnico."
+                               style="min-height: 90px; max-height: 150px; overflow: auto; white-space: pre-wrap;"/>
+                        <field name="sunatfm_gre_response_message" string="Respuesta SUNAT"
+                               widget="text" rows="5" colspan="2"
+                               placeholder="Respuesta de SUNAT"
+                               style="min-height: 110px; max-height: 180px; overflow: auto; white-space: pre-wrap;"/>
+                    </group>
+                    <group string="Archivos GRE" colspan="2" invisible="not sunatfm_gre_edi_document_id">
+                        <field name="sunatfm_gre_xml_filename"/>
+                        <field name="sunatfm_gre_xml_file" filename="sunatfm_gre_xml_filename"/>
+                        <field name="sunatfm_gre_cdr_filename"/>
+                        <field name="sunatfm_gre_cdr_file" filename="sunatfm_gre_cdr_filename"/>
+                    </group>
+                </page>
+            </xpath>
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="sunatfm_gre_edi_state" string="Estado SUNAT" widget="badge"
+                       invisible="not sunatfm_gre_edi_document_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="sunatfm_stock_picking_list_gre" model="ir.ui.view">
+        <field name="name">stock.picking.list.sunatfm.gre</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='name']" position="after">
+                <field name="sunatfm_gre_number" string="Número GRE" optional="show"
+                       invisible="picking_type_code != 'outgoing'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

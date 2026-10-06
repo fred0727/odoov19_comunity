@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sunatfm_pe_edi_document_view_list" model="ir.ui.view">
+        <field name="name">sunatfm.pe.edi.document.list</field>
+        <field name="model">sunatfm.pe.edi.document</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="document_kind"/>
+                <field name="account_move_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="state" widget="badge" decoration-success="state == 'accepted'" decoration-danger="state == 'rejected'"/>
+                <field name="create_date"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="sunatfm_pe_edi_document_view_form" model="ir.ui.view">
+        <field name="name">sunatfm.pe.edi.document.form</field>
+        <field name="model">sunatfm.pe.edi.document</field>
+        <field name="arch" type="xml">
+            <form string="Documento electrónico">
+                <header>
+                    <button name="action_send" type="object" string="Enviar a SUNAT" class="btn-primary" invisible="document_kind not in ['cpe', 'gre', 'void'] or state not in ['draft', 'rejected']"/>
+                    <button name="action_check_void_status" type="object" string="Consultar estado de baja" class="btn-secondary" invisible="document_kind != 'void' or state != 'sent'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,sent,accepted,rejected"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="document_kind"/>
+                            <field name="account_move_id"/>
+                            <field name="stock_picking_id" invisible="document_kind != 'gre'"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="state" readonly="1"/>
+                            <field name="ticket" readonly="1" invisible="document_kind != 'void'"/>
+                            <field name="void_reason" readonly="1" invisible="document_kind != 'void'"/>
+                            <field name="response_code"/>
+                            <field name="response_message"/>
+                        </group>
+                    </group>
+                    <group string="Archivos">
+                        <field name="xml_filename" string="Nombre XML"/>
+                        <field name="xml_file" string="XML firmado enviado" filename="xml_filename"/>
+                        <field name="cdr_filename" string="Nombre CDR"/>
+                        <field name="cdr_file" string="CDR SUNAT" filename="cdr_filename"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="sunatfm_pe_edi_document_action" model="ir.actions.act_window">
+        <field name="name">Documentos electrónicos</field>
+        <field name="res_model">sunatfm.pe.edi.document</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

@@ -1,0 +1,73 @@
+# sphinx build directories
+_build/
+
+# dotfiles
+.*
+!.gitignore
+!.gitkeep
+!.github
+!.mailmap
+!.weblate.json
+!.env.example
+# compiled python files
+*.py[co]
+__pycache__/
+# setup.py egg_info
+*.egg-info
+# emacs backup files
+*~
+# hg stuff
+*.orig
+status
+# odoo filestore
+odoo/filestore
+# maintenance migration scripts
+odoo/addons/base/maintenance
+# windows installation config file
+/odoo.conf
+
+# Secretos y datos locales
+.env
+AGENTS.md
+*.log
+backups/
+filestore/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+.DS_Store
+
+# Fuentes legadas de referencia: contienen credenciales/certificados históricos.
+# La migración saneada debe vivir exclusivamente en custom-addons/.
+/remsina_odoov13/
+remsina_odoov13.zip
+
+# generated for windows installer?
+install/win32/*.bat
+install/win32/meta.py
+
+# needed only when building for win32
+setup/win32/static/less/
+setup/win32/static/wkhtmltopdf/
+setup/win32/static/postgresql*.exe
+
+# js tooling
+node_modules
+jsconfig.json
+tsconfig.json
+package-lock.json
+package.json
+.husky
+
+# various virtualenv
+/bin/
+/build/
+/dist/
+/include/
+/lib/
+/man/
+/share/
+/src/

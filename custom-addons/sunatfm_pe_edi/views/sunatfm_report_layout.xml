@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Plantilla compartida: solo estructura y contenido dinámico del
+         encabezado y pie. Los reportes individuales aportan su propio cuerpo. -->
+    <template id="sunatfm_document_header">
+        <div class="header sunatfm_report_header">
+            <style>
+                .sunatfm_report_header { display: block; width: 100%; margin-bottom: 5px; }
+                .sunatfm_report_header .sunatfm_header_table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+                .sunatfm_report_header .sunatfm_company_cell { width: 64%; vertical-align: top; }
+                .sunatfm_report_header .sunatfm_document_cell { width: 36%; padding-left: 8px; vertical-align: top; }
+                .sunatfm_report_header .sunatfm_report_logo { max-height: 75px; max-width: 235px; object-fit: contain; }
+                .sunatfm_report_header .sunatfm_company_data { margin-top: 5px; line-height: 1.2; font-size: 14px; }
+                .sunatfm_report_header .sunatfm_document_box { display: block; width: 100%; box-sizing: border-box; min-height: 72px; padding: 10px; background-color: #fff; border: 1px solid #9db5c2; border-radius: 8px; color: #111; text-align: center; font-size: 16px; font-weight: bold; }
+                .sunatfm_report_header .sunatfm_document_box td { text-align: center; border: 0; background-color: #F1E8EF; }
+                .sunatfm_report_header .sunatfm_document_number { margin-top: 4px; font-size: 18px; }
+                .sunatfm_report_footer { width: 100%; box-sizing: border-box; padding: 0 8px; color: #555; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.2; text-align: center; display: flex; justify-content:center;}
+            </style>
+            <table class="sunatfm_header_table" style="width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed;">
+                <tr>
+                    <td class="sunatfm_company_cell" style="width: 64%; vertical-align: top;">
+                        <img t-if="doc.company_id.logo" class="sunatfm_report_logo" style="max-height: 75px; max-width: 235px; object-fit: contain;" t-att-src="image_data_uri(doc.company_id.logo)" alt="Logo"/>
+                        <div class="sunatfm_company_data" style="margin-top: 5px; line-height: 1.2; font-size: 13px;">
+                            <strong t-out="doc.company_id.name"/>
+                            <br/>
+                            <span t-out="doc.company_id.partner_id.street or ''"/>
+                            <t t-if="doc.company_id.partner_id.street2">
+                                <span t-out="' ' + doc.company_id.partner_id.street2"/>
+                            </t>
+                            <br/>
+                            <span t-out="doc.company_id.partner_id.city or ''"/>
+                            <t t-if="doc.company_id.partner_id.state_id">
+                                <span t-out="' - ' + doc.company_id.partner_id.state_id.name"/>
+                            </t>
+                            <t t-if="doc.company_id.partner_id.country_id">
+                                <span> - PER&#218;</span>
+                            </t>
+                            <br/>
+                            <t t-if="doc.company_id.partner_id.phone">Tel&#233;fono:
+                                <span t-out="doc.company_id.partner_id.phone"/>
+                            </t>
+                            <t t-if="doc.company_id.partner_id.email"> / Correo electr&#243;nico:
+                                <span t-out="doc.company_id.partner_id.email"/>
+                            </t>
+                        </div>
+                    </td>
+                    <td class="sunatfm_document_cell" style="width: 36%; padding-left: 8px; vertical-align: top;">
+                        <div class="sunatfm_document_box" style="width: 100%; min-height: 86px; box-sizing: border-box; padding: 11px 12px 10px; border: 2px solid #714B67; border-radius: 10px; overflow: hidden; background-color: #fff; text-align: center; font-family: Arial, sans-serif; font-weight: bold;">
+                            <div style="font-size: 16px; line-height: 1.2; color: #111; letter-spacing: .2px;">
+                                RUC:
+                                <span t-out="doc.company_id.partner_id.vat or ''"/>
+                            </div>
+                            <div style="margin-top: 7px; padding-top: 7px; font-size: 18px; line-height: 1.2; color: #111;" t-out="document_label"/>
+                            <div class="sunatfm_document_number" style="margin-top: 5px; font-size: 20px; line-height: 1.15; color: #111;" t-out="document_number"/>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+    <template id="sunatfm_document_footer">
+        <t t-set="sunatfm_odoo_logo" t-value="doc.env.ref('sunatfm_pe_edi.sunatfm_odoo_logo_attachment').datas"/>
+        <div class="footer sunatfm_report_footer text-center" style="width: 100%; box-sizing: border-box; padding: 10px 8px 0; color: #555; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.2; text-align: center;">
+            <!-- Las cotizaciones no son documentos electrónicos. Para CPE y
+                 GRE se muestra la leyenda legal con el tipo de documento que
+                 ya definió cada reporte en document_label. -->
+            <div t-if="document_label and document_label not in ('COTIZACI&#211;N', 'ORDEN DE COMPRA')" style="width: 100%; text-align: center; margin-bottom: 3px;">
+                Representaci&#243;n impresa de la
+                <span t-out="document_label"/>, consulte en www.sunat.gob.pe
+            </div>
+            <div style="width: 100%; text-align: center;">
+                <span t-out="doc.company_id.name"/>
+                <t t-if="doc.company_id.partner_id.vat"> · RUC
+                    <span t-out="doc.company_id.partner_id.vat"/>
+                </t>
+                <span> · Sistema de gesti&#243;n empresarial · P&#225;gina
+                    <span class="page"/> de
+                    <span class="topage"/></span>
+            </div>
+            <div class="sunatfm_footer_logo" style="width: 100%; text-align: right;">
+                <img t-att-src="image_data_uri(sunatfm_odoo_logo)" class="sunatfm_odoo_logo" style="width: 105px; height: auto; margin-top: 0px;" alt="Odoo"/>
+            </div>
+        </div>
+    </template>
+</odoo>

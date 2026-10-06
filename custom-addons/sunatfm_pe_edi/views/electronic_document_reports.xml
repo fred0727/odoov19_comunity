@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="sunatfm_invoice_document">
+        <t t-set="doc" t-value="o.with_context(lang='es_PE')"/>
+        <t t-set="customer" t-value="doc.partner_id.commercial_partner_id"/>
+        <t t-set="contact" t-value="doc.partner_id.name"/>
+        <t t-set="document_label" t-value="'FACTURA ELECTR&#211;NICA' if doc.l10n_latam_document_type_id.code == '01' else ('BOLETA DE VENTA ELECTR&#211;NICA' if doc.l10n_latam_document_type_id.code == '03' else ('NOTA DE CR&#201;DITO ELECTR&#211;NICA' if doc.l10n_latam_document_type_id.code == '07' else ('NOTA DE D&#201;BITO ELECTR&#211;NICA' if doc.l10n_latam_document_type_id.code == '08' else 'DOCUMENTO ELECTR&#211;NICO')))"/>
+        <t t-set="document_number" t-value="(doc.name or '').replace(' ', '')"/>
+        <t t-set="is_detraction" t-value="doc.sunatfm_edi_detraction_id and doc.sunatfm_edi_operation_type in ('1001', '1002', '1003', '1004')"/>
+        <t t-set="detraction_banks" t-value="doc.company_id.partner_id.bank_ids.filtered(lambda bank: bank.sunatfm_edi_detraction_account)"/>
+        <t t-set="normal_banks" t-value="doc.company_id.partner_id.bank_ids.filtered(lambda bank: not bank.sunatfm_edi_detraction_account)"/>
+        <t t-set="installments" t-value="doc.sunatfm_edi_payment_installments()"/>
+        <t t-set="is_credit_sale" t-value="doc.sunatfm_edi_is_credit_sale()"/>
+        <t t-set="tax_summary" t-value="doc.sunatfm_edi_tax_summary()"/>
+        <t t-set="qr_image" t-value="doc.sunatfm_edi_qr_image()"/>
+        <div class="sunatfm_report" style="font-size: 12px;">
+            <style>
+                .sunatfm_report { font-family: Arial, sans-serif; color: #111; }
+                .sunatfm_article { padding-bottom: 20px; }
+                .sunatfm_info { background: #FBF8FA; border: 1px solid #C9B3C2; border-radius: 8px; padding: 10px; margin-top: 8px; }
+                .sunatfm_info td { padding: 4px 2px; vertical-align: top; }
+                .sunatfm_info > table,
+                .sunatfm_info > table *,
+                .sunatfm_info > table tbody,
+                .sunatfm_info > table tr,
+                .sunatfm_info > table td { border: 0 !important; border-style: none !important; outline: 0 !important; box-shadow: none !important; }
+                .sunatfm_info > table { border-collapse: separate !important; border-spacing: 0 !important; }
+                .sunatfm_info > table { table-layout: fixed !important; }
+                .sunatfm_header_grid .sunatfm_info > table { width: 100% !important; table-layout: auto !important; }
+                .sunatfm_header_grid .sunatfm_info > table td:first-child { width: 125px !important; }
+                .sunatfm_header_grid .sunatfm_info > table td:nth-child(2) { width: auto !important; padding-left: 8px; overflow-wrap: anywhere; word-wrap: break-word; }
+                .sunatfm_label { font-weight: bold; width: 125px; white-space: nowrap; }
+                .sunatfm_lines { margin-top: 14px; }
+                /* El encabezado de columnas se muestra únicamente en la
+                   primera página, igual que en las cotizaciones. */
+                .sunatfm_lines thead { display: table-row-group; }
+                .sunatfm_lines th { background: #F1E8EF; border: 1px solid #C9B3C2; border-bottom: 2px solid #714B67; padding: 8px 4px; }
+                .sunatfm_lines td { border-bottom: 1px solid #E2D9DF; padding: 7px 4px; vertical-align: top; }
+                .sunatfm_lines { page-break-inside: auto !important; }
+                .sunatfm_lines tbody { display: table-row-group; }
+                .sunatfm_lines tr { display: table-row !important; height: auto !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; }
+                .sunatfm_lines td { height: auto !important; overflow: visible !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; }
+                .sunatfm_lines .line-description { white-space: pre-wrap; overflow-wrap: anywhere; word-wrap: break-word; }
+                .sunatfm_lines_body { margin-top: 0; }
+                .sunatfm_line_row { display: block; width: 100%; min-height: 0; page-break-inside: auto; break-inside: auto; overflow: visible; border-bottom: 1px solid #E2D9DF; }
+                .sunatfm_line_row:after { content: ''; display: block; clear: both; }
+                .sunatfm_line_cell { float: left; box-sizing: border-box; border-bottom: 0; padding: 3px 4px; min-height: 0; }
+                .sunatfm_right { text-align: right; }
+                .sunatfm_center { text-align: center; }
+                .sunatfm_article table.sunatfm_totals { width: 310px !important; margin: 14px 0 0 auto; border-collapse: separate !important; border-spacing: 0 !important; font-size: 12px; font-weight: bold; }
+                .sunatfm_totals, .sunatfm_totals tr, .sunatfm_totals td { border: 0 !important; border-style: none !important; outline: 0 !important; box-shadow: none !important; }
+                .sunatfm_totals td { padding: 3px 6px; line-height: 1.15; font-weight: bold; }
+                .sunatfm_totals .sunatfm_total_label { width: 56%; text-align: right; }
+                .sunatfm_totals .sunatfm_total_currency { width: 12%; text-align: center; }
+                .sunatfm_totals .sunatfm_total_amount { width: 32%; text-align: right; }
+                .sunatfm_total td { border-top: 2px solid #714B67 !important; }
+                .sunatfm_box { background: #FBF8FA; border: 1px solid #C9B3C2; border-left: 3px solid #714B67; border-radius: 6px; padding: 9px 12px; margin-top: 12px; page-break-inside: avoid; }
+                .sunatfm_amount_words { border: 1px solid #aaa !important; border-radius: 8px; padding: 10px 12px; margin-top: 12px; margin-bottom: 10px; box-sizing: border-box; }
+                .sunatfm_notes { margin-top: 14px; line-height: 1.4; page-break-inside: avoid; }
+                .sunatfm_article table.sunatfm_installments { width: 430px !important; margin-top: 12px; border-collapse: collapse; font-size: 12px; table-layout: auto; page-break-inside: avoid; }
+                .sunatfm_installments th, .sunatfm_installments td { border: 1px solid #C9B3C2; padding: 5px 7px; text-align: left; white-space: nowrap; }
+                .sunatfm_installments th { background: #F1E8EF; font-weight: bold; }
+                .sunatfm_qr { margin-top: 14px; text-align: left; page-break-inside: avoid; }
+                .sunatfm_qr img { width: 105px; height: 105px; }
+            </style>
+            <t t-call="sunatfm_pe_edi.sunatfm_document_header"/>
+            <div class="article sunatfm_article">
+                <style>
+                    .sunatfm_article { font-family: Arial, sans-serif; font-size: 12px; color: #111; padding-bottom: 20px; }
+                    .sunatfm_article table { width: 100%; border-collapse: collapse; }
+                    .sunatfm_info { background: #FBF8FA; border: 1px solid #C9B3C2; border-radius: 8px; padding: 10px; margin-top: 8px; }
+                    .sunatfm_info td { padding: 4px 2px; vertical-align: top; }
+                    .sunatfm_info > table,
+                    .sunatfm_info > table *,
+                    .sunatfm_info > table tbody,
+                    .sunatfm_info > table tr,
+                    .sunatfm_info > table td { border: 0 !important; border-style: none !important; outline: 0 !important; box-shadow: none !important; }
+                    .sunatfm_info > table { border-collapse: separate !important; border-spacing: 0 !important; }
+                    .sunatfm_label { font-weight: bold; width: 125px; white-space: nowrap; }
+                    .sunatfm_lines { margin-top: 14px; }
+                    .sunatfm_lines thead { display: table-row-group; }
+                    .sunatfm_lines th { background: #F1E8EF; border: 1px solid #C9B3C2; border-bottom: 2px solid #714B67; padding: 8px 4px; }
+                    .sunatfm_lines td { border-bottom: 1px solid #E2D9DF; padding: 7px 4px; vertical-align: top; }
+                    .sunatfm_lines { page-break-inside: auto !important; }
+                    .sunatfm_lines tbody { display: table-row-group; }
+                    .sunatfm_lines tr { display: table-row !important; height: auto !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; }
+                    .sunatfm_lines td { height: auto !important; overflow: visible !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; }
+                    .sunatfm_lines .line-description { white-space: pre-wrap; overflow-wrap: anywhere; word-wrap: break-word; }
+                    .sunatfm_lines_body { margin-top: 0; }
+                    .sunatfm_line_row { display: block; width: 100%; min-height: 0; page-break-inside: auto; break-inside: auto; overflow: visible; border-bottom: 1px solid #E2D9DF; }
+                    .sunatfm_line_row:after { content: ''; display: block; clear: both; }
+                    .sunatfm_line_cell { float: left; box-sizing: border-box; border-bottom: 0; padding: 3px 4px; min-height: 0; }
+                    .sunatfm_right { text-align: right; }
+                    .sunatfm_center { text-align: center; }
+                    .sunatfm_article table.sunatfm_totals { width: 310px !important; margin: 14px 0 0 auto; border-collapse: separate !important; border-spacing: 0 !important; font-size: 12px; font-weight: bold; }
+                    .sunatfm_totals, .sunatfm_totals tr, .sunatfm_totals td { border: 0 !important; border-style: none !important; outline: 0 !important; box-shadow: none !important; }
+                    .sunatfm_totals td { padding: 3px 6px; line-height: 1.15; font-weight: bold; }
+                    .sunatfm_totals .sunatfm_total_label { width: 56%; text-align: right; }
+                    .sunatfm_totals .sunatfm_total_currency { width: 12%; text-align: center; }
+                    .sunatfm_totals .sunatfm_total_amount { width: 32%; text-align: right; }
+                    .sunatfm_total td { border-top: 2px solid #714B67 !important; }
+                    .sunatfm_box { background: #FBF8FA; border: 1px solid #C9B3C2; border-left: 3px solid #714B67; border-radius: 6px; padding: 9px 12px; margin-top: 12px; page-break-inside: avoid; }
+                    .sunatfm_notes { margin-top: 14px; line-height: 1.4; page-break-inside: avoid; }
+                    .sunatfm_article table.sunatfm_installments { width: 430px !important; margin-top: 12px; border-collapse: collapse; font-size: 12px; table-layout: auto; page-break-inside: avoid; }
+                    .sunatfm_installments th, .sunatfm_installments td { border: 1px solid #C9B3C2; padding: 5px 7px; text-align: left; white-space: nowrap; }
+                    .sunatfm_installments th { background: #F1E8EF; font-weight: bold; }
+                    .sunatfm_qr { margin-top: 14px; text-align: left; page-break-inside: avoid; }
+                    .sunatfm_qr img { width: 105px; height: 105px; }
+                </style>
+                <table class="sunatfm_header_grid" style="border: 0 !important; border-collapse: separate !important; border-spacing: 6px 0 !important;">
+                    <tr>
+                        <td class="sunatfm_header_left" style="width: 62%; padding: 0; vertical-align: top; border: 0 !important;">
+                            <div class="sunatfm_info">
+                                <table>
+                                    <tr>
+                                        <td class="sunatfm_label">CLIENTE</td>
+                                        <td t-out="customer.name"/>
+                                    </tr>
+                                    <tr>
+                                        <td class="sunatfm_label">RUC</td>
+                                        <td t-out="customer.vat or ''"/>
+                                    </tr>
+                                    <tr>
+                                        <td class="sunatfm_label">DIRECCI&#211;N</td>
+                                        <td>
+                                            <span t-out="customer.street or ''"/>
+                                            <t t-if="customer.street2">
+                                                <span t-out="' ' + customer.street2"/>
+                                            </t>
+                                            <t t-if="customer.city">
+                                                <span t-out="', ' + customer.city"/>
+                                            </t>
+                                            <t t-if="customer.state_id">
+                                                <span t-out="' - ' + customer.state_id.name"/>
+                                            </t>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="sunatfm_label">CONTACTO</td>
+                                        <td t-out="contact"/>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                        <td class="sunatfm_header_right" style="width: 38%; padding: 0; vertical-align: top; border: 0 !important;">
+                            <div class="sunatfm_info">
+                                <table>
+                                    <tr>
+                                        <td class="sunatfm_label">FECHA EMISI&#211;N</td>
+                                        <td t-out="doc.invoice_date or ''"/>
+                                    </tr>
+                                    <tr>
+                                        <td class="sunatfm_label">FECHA DE VENC.</td>
+                                        <td t-out="doc.invoice_date_due or ''"/>
+                                    </tr>
+                                    <tr>
+                                        <td class="sunatfm_label">MONEDA</td>
+                                        <td t-out="doc.currency_id.name == 'PEN' and 'SOLES' or doc.currency_id.name"/>
+                                    </tr>
+                                    <tr t-if="doc.ref">
+                                        <td class="sunatfm_label">REFERENCIA</td>
+                                        <td t-out="doc.ref or ''"/>
+                                    </tr>
+                                    <tr>
+                                        <t t-if="doc.move_type in ('out_refund', 'in_refund') and doc.reversed_entry_id">
+                                            <td class="sunatfm_label">DOC. AFECTADO</td>
+                                            <td t-out="(doc.reversed_entry_id.name or doc.reversed_entry_id.l10n_latam_document_number or '').replace(' ', '')"/>
+                                        </t>
+                                        <t t-else="">
+                                            <td colspan="2"></td>
+                                        </t>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+                <table class="sunatfm_lines lines-header">
+                    <thead>
+                        <tr>
+                            <th class="sunatfm_center" style="width: 8%;">CANT.</th>
+                            <th class="sunatfm_center" style="width: 8%;">UM</th>
+                            <th class="sunatfm_center" style="width: 11%;">C&#211;D.</th>
+                            <th style="width: 38%;">DESCRIPCI&#211;N</th>
+                            <th class="sunatfm_right" style="width: 8%;">V/U</th>
+                            <th class="sunatfm_right" style="width: 8%;">DESC.</th>
+                            <th class="sunatfm_right" style="width: 8%;">P/U</th>
+                            <th class="sunatfm_right" style="width: 11%;">IMPORTE</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div class="sunatfm_lines_body">
+                    <t t-foreach="doc.invoice_line_ids" t-as="line">
+                        <t t-if="line.display_type == 'product'">
+                            <div class="sunatfm_line_row">
+                                <div class="sunatfm_line_cell sunatfm_center" style="width: 8%;" t-out="line.quantity" t-options="{'widget': 'float', 'precision': 2}"/>
+                                <div class="sunatfm_line_cell sunatfm_center" style="width: 8%;" t-out="line.product_uom_id.name or ''"/>
+                                <div class="sunatfm_line_cell sunatfm_center" style="width: 11%;" t-out="line.product_id.product_tmpl_id.sunatfm_edi_sku or line.product_id.default_code or ''"/>
+                                <div class="sunatfm_line_cell line-description" style="width: 38%;" t-out="line.name"/>
+                                <div class="sunatfm_line_cell sunatfm_right" style="width: 8%;" t-out="line.tax_ids.compute_all(line.price_unit, currency=doc.currency_id, quantity=1).get('total_excluded', line.price_unit)" t-options="{'widget': 'float', 'precision': 2}"/>
+                                <div class="sunatfm_line_cell sunatfm_right" style="width: 8%;" t-out="'{:.2f} %'.format(line.discount or 0.0)"/>
+                                <div class="sunatfm_line_cell sunatfm_right" style="width: 8%;" t-out="line.price_total / line.quantity if line.quantity else 0" t-options="{'widget': 'float', 'precision': 2}"/>
+                                <div class="sunatfm_line_cell sunatfm_right" style="width: 11%;" t-out="line.price_subtotal" t-options="{'widget': 'float', 'precision': 2}"/>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <div class="sunatfm_line_row" style="background-color: #f1f1f1;">
+                                <div class="sunatfm_line_cell" style="width: 100%; background-color: #f1f1f1;">
+                                    <span t-field="line.name"/>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+                <table class="sunatfm_totals">
+                    <tr t-foreach="tax_summary" t-as="tax_row">
+                        <td class="sunatfm_total_label" t-out="tax_row[0]"/>
+                        <td class="sunatfm_total_currency" t-out="doc.currency_id.symbol"/>
+                        <td class="sunatfm_total_amount" t-out="'{:,.2f}'.format(tax_row[1]).replace(',', '§').replace('.', ',').replace('§', '.')"/>
+                    </tr>
+                    <tr class="sunatfm_total">
+                        <td class="sunatfm_total_label">TOTAL</td>
+                        <td class="sunatfm_total_currency" t-out="doc.currency_id.symbol"/>
+                        <td class="sunatfm_total_amount" t-out="'{:,.2f}'.format(doc.amount_total).replace(',', '§').replace('.', ',').replace('§', '.')"/>
+                    </tr>
+                </table>
+                <div class="sunatfm_amount_words" style="display: block; border: 1px solid #aaa !important; border-radius: 8px; padding: 10px 12px; margin-top: 12px; margin-bottom: 10px;">
+                    <strong>IMPORTE EN LETRAS:</strong>
+                    <span t-out="doc.currency_id.amount_to_text(doc.amount_total).upper()"/>
+                </div>
+                <div t-if="doc.sunatfm_edi_withholding_applicable" class="sunatfm_box">
+                    <strong>INFORMACI&#211;N DE LA RETENCI&#211;N</strong>
+                    <div>Base imponible de la retenci&#243;n:
+                        <span t-field="doc.sunatfm_edi_withholding_base"
+                              t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                    </div>
+                    <div>Porcentaje de retenci&#243;n:
+                        <span t-out="'{:.2f}%'.format(doc.sunatfm_edi_withholding_rate)"/>
+                    </div>
+                    <div>Monto estimado de la retenci&#243;n:
+                        <span t-field="doc.sunatfm_edi_withholding_amount"
+                              t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                    </div>
+                    <div>Neto estimado a recibir:
+                        <span t-field="doc.sunatfm_edi_withholding_net_amount"
+                              t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                    </div>
+                </div>
+                <div t-if="doc.narration" class="sunatfm_notes">
+                    <strong>OBSERVACIONES:</strong>
+                    <span t-out="doc.narration"/>
+                </div>
+                <div class="sunatfm_notes">
+                    <strong>T&#201;RMINOS DE PAGO:</strong>
+                    <span t-out="doc.invoice_payment_term_id.name or 'Contado'"/>
+                </div>
+                <div t-if="is_detraction" class="sunatfm_box">
+                    <div style="margin-bottom:2px">
+                        <strong>DETRACCI&#211;N SUNAT:</strong>
+                        <span t-out="'%s - %s' % (doc.sunatfm_edi_detraction_id.code, doc.sunatfm_edi_detraction_id.name)"/>
+                    </div>
+                    <div style="margin-bottom:2px">
+                        <strong>PORCENTAJE DE DETRACCI&#211;N:</strong>
+                        <span t-out="str(round(doc.sunatfm_edi_detraction_id.rate, 2)) + '%'"/>
+                    </div>
+                    <div style="margin-bottom:2px">
+                        <strong>MONTO DE DETRACCI&#211;N:</strong>
+                        <span t-field="doc.sunatfm_edi_detraction_amount" t-options="{'widget': 'monetary', 'display_currency': doc.company_currency_id}"/>
+                    </div>
+                    <div t-if="detraction_banks">
+                        <strong>Operaci&#243;n sujeta al Sistema de Pago de Obligaciones Tributarias:</strong>
+                        BANCO DE LA NACI&#211;N
+                        <t t-foreach="detraction_banks" t-as="bank"> CTA. DETRACCI&#211;N N&#186;
+                            <span t-out="bank.acc_number"/>
+                        </t>
+                    </div>
+                </div>
+                <div t-if="normal_banks" class="sunatfm_notes">
+                    <strong>CUENTAS BANCARIAS:</strong>
+                    <t t-foreach="normal_banks" t-as="bank">
+                        <span>
+                            Cuenta Cte.
+                            <span t-out="bank.bank_id.name or 'Banco'"/>:
+                            <span t-out="bank.acc_number"/>
+                            <t t-if="bank.sunatfm_edi_cci">&#160;&#160;CCI:
+                                <span t-out="bank.sunatfm_edi_cci"/>
+                            </t>
+                        </span>
+                    </t>
+                </div>
+                <table t-if="is_credit_sale and installments" class="sunatfm_installments">
+                    <thead>
+                        <tr>
+                            <th>CUOTA</th>
+                            <th>FECHA DE VENCIMIENTO</th>
+                            <th class="sunatfm_right">MONTO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="installments" t-as="installment">
+                            <td t-out="'Cuota %d' % installment[0]"/>
+                            <td t-out="installment[1]"/>
+                            <td class="sunatfm_right">
+                                <span t-out="doc.currency_id.symbol"/>
+                                <span t-out="'{:,.2f}'.format(installment[2] * (1 - doc.sunatfm_edi_withholding_rate / 100) if doc.sunatfm_edi_withholding_applicable else installment[2]).replace(',', '§').replace('.', ',').replace('§', '.')"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- <div class="sunatfm_notes">
+                    <div>Horario de entrega de Lunes a Viernes de 8:00 a.m a 6:00 p.m y los S&#225;bados de 8:00 a.m a 12:00 p.m.</div>
+                    <div>Solo incluye las partidas descritas, Cualquier cambio o modificaci&#243;n del material a suministrar ser&#225; considerado como adicional.</div>
+                    <div>Personal cuenta con las herramientas, equipos y capacitaciones para realizar el trabajo.</div>
+                    <div>Los Veh&#237;culos y Equipos (gr&#250;as, manlift) cuentan con todos los seguros correspondientes.</div>
+                    <div>Cliente proporcionar&#225; facilidades de Operaci&#243;n.</div>
+                </div> -->
+                <div t-if="qr_image" class="sunatfm_qr" style="width: 100%; margin-top: 10px; text-align: left;">
+                    <div style="display: inline-block; border: 1px solid #714B67; border-radius: 8px; padding: 7px; text-align: center; background: #fff;">
+                        <img t-att-src="'data:image/png;base64,%s' % qr_image" style="width: 105px; height: 105px;" alt="C&#243;digo QR SUNAT"/>
+                    </div>
+                </div>
+            </div>
+            <t t-call="sunatfm_pe_edi.sunatfm_document_footer"/>
+        </div>
+    </template>
+    <template id="sunatfm_account_report_invoice" inherit_id="account.report_invoice">
+        <xpath expr="//t[@t-call='account.report_invoice_document']" position="replace">
+            <t t-call="sunatfm_pe_edi.sunatfm_invoice_document" t-lang="'es_PE'"/>
+        </xpath>
+    </template>
+</odoo>

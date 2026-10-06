@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sunatfm_pe_edi_account_move_form" model="ir.ui.view">
+        <field name="name">account.move.form.sunatfm.edi</field>
+        <field name="model">account.move</field>
+        <field name="inherit_id" ref="account.view_move_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='action_post']" position="after">
+                <!-- The production form must not expose the technical XML draft action. -->
+                <button name="action_sunatfm_edi_prepare_draft" type="object" string="Preparar XML SUNAT" class="btn-secondary" invisible="1"/>
+                <!-- Debug-only copy for technical validation and XML inspection. -->
+                <button name="action_sunatfm_edi_prepare_draft" type="object" string="Preparar XML SUNAT" class="btn-secondary" groups="base.group_no_one" invisible="move_type not in ('out_invoice', 'out_refund') or state != 'posted'"/>
+                <button name="action_sunatfm_edi_send" type="object" string="Enviar a SUNAT" class="btn-primary" invisible="move_type not in ('out_invoice', 'out_refund') or state != 'posted'"/>
+                <button name="action_sunatfm_edi_check_sunat" type="object" string="Consultar SUNAT" class="btn-secondary"
+                        invisible="not sunatfm_edi_void_pending"/>
+            </xpath>
+            <!-- Keep the fiscal cancellation action beside Odoo's debit-note action. -->
+            <xpath expr="//header/button[@name='action_debit_note']" position="after">
+                <button name="action_sunatfm_edi_void_wizard" type="object" string="Anular comprobante" class="btn-secondary"
+                        confirm="Se solicitará la baja electrónica ante SUNAT. Cuando SUNAT confirme la baja, el comprobante pasará automáticamente al estado Cancelado. ¿Desea continuar?"
+                        invisible="move_type not in ('out_invoice', 'out_refund') or state != 'posted' or sunatfm_edi_last_state != 'accepted' or l10n_latam_document_type_id.code == '03'"/>
+            </xpath>
+            <xpath expr="//group[@id='header_left_group']/div[./field[@name='partner_id']]" position="after">
+                <label for="sunatfm_edi_operation_type" string="Tipo de operación" style="font-weight:bold;"
+                       invisible="move_type not in ('out_invoice', 'out_refund')"/>
+                <field name="sunatfm_edi_operation_type" nolabel="1"
+                       invisible="move_type not in ('out_invoice', 'out_refund')"
+                       readonly="state != 'draft'"/>
+            </xpath>
+            <!-- Visible operational state: users should not need to open the
+                 technical electronic-invoicing tab to know SUNAT's result. -->
+            <xpath expr="//field[@name='l10n_latam_document_type_id']" position="after">
+                <field name="sunatfm_edi_status_display"
+                       string="Facturación electrónica"
+                       readonly="1"
+                       invisible="move_type not in ('out_invoice', 'out_refund')"/>
+            </xpath>
+            <xpath expr="//header/button[@name='button_draft']" position="attributes">
+                <attribute name="groups">base.group_system</attribute>
+                <attribute name="invisible">not show_reset_to_draft_button</attribute>
+            </xpath>
+            <xpath expr="//page[@name='other_info']" position="after">
+                <page string="Retenciones recibidas" name="sunatfm_withholdings" invisible="move_type != 'out_invoice'">
+                    <group>
+                        <field name="sunatfm_withholding_received" readonly="1"/>
+                    </group>
+                    <field name="sunatfm_withholding_ids">
+                        <list editable="bottom">
+                            <field name="name"/>
+                            <field name="cre_date"/>
+                            <field name="payment_date"/>
+                            <field name="payment_amount"/>
+                            <field name="retention_base" readonly="1"/>
+                            <field name="retention_rate" readonly="1"/>
+                            <field name="retention_amount"/>
+                            <field name="currency_id" column_invisible="1"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Facturación electrónica" name="sunatfm_edi" invisible="move_type not in ['out_invoice', 'out_refund']">
+                    <group>
+                        <group string="Operación">
+                            <field name="sunatfm_edi_detraction_id" readonly="1"/>
+                            <field name="sunatfm_edi_detraction_amount" readonly="1"/>
+                            <field name="sunatfm_edi_withholding_applicable" readonly="1"/>
+                            <field name="sunatfm_edi_withholding_rate"
+                                   invisible="not sunatfm_edi_withholding_applicable"
+                                   readonly="state != 'draft'"/>
+                            <field name="sunatfm_edi_withholding_base"
+                                   invisible="not sunatfm_edi_withholding_applicable" readonly="1"/>
+                            <field name="sunatfm_edi_withholding_amount"
+                                   invisible="not sunatfm_edi_withholding_applicable" readonly="1"/>
+                            <field name="sunatfm_edi_withholding_net_amount"
+                                   invisible="not sunatfm_edi_withholding_applicable" readonly="1"/>
+                            <field name="sunatfm_edi_note_reason_code" invisible="move_type != 'out_refund'"
+                                   readonly="sunatfm_edi_last_state in ('sent', 'accepted')"/>
+                        </group>
+                        <group string="Documentos">
+                            <button name="action_sunatfm_edi_view_documents" type="object" class="oe_stat_button" icon="fa-file-code-o">
+                                <field name="sunatfm_edi_document_count" widget="statinfo" string="Documentos SUNAT"/>
+                            </button>
+                        </group>
+                    </group>
+                    <group string="Archivos SUNAT" invisible="not sunatfm_edi_document_count">
+                        <field name="sunatfm_edi_xml_available" invisible="1"/>
+                        <field name="sunatfm_edi_cdr_available" invisible="1"/>
+                        <button name="action_sunatfm_edi_download_xml" type="object"
+                                string="Descargar XML firmado enviado" icon="fa-download"
+                                class="btn-secondary" invisible="not sunatfm_edi_xml_available"/>
+                        <button name="action_sunatfm_edi_download_cdr" type="object"
+                                string="Descargar CDR SUNAT" icon="fa-download"
+                                class="btn-secondary" invisible="not sunatfm_edi_cdr_available"/>
+                        <div class="text-muted" invisible="sunatfm_edi_xml_available">
+                            El XML firmado estará disponible después del primer envío a SUNAT.
+                        </div>
+                        <div class="text-muted" invisible="sunatfm_edi_cdr_available">
+                            El CDR estará disponible cuando SUNAT responda el envío.
+                        </div>
+                    </group>
+                    <group string="Resultado SUNAT" invisible="not sunatfm_edi_document_count">
+                        <field name="sunatfm_edi_last_state" readonly="1"/>
+                        <field name="sunatfm_edi_last_response_code" readonly="1"/>
+                        <field name="sunatfm_edi_last_response_message"
+                               string="Respuesta SUNAT"
+                               rows="8" widget="text" colspan="2"
+                               style="min-height: 100px; max-height: 220px; overflow: auto; white-space: pre-wrap; user-select: text;"/>
+                    </group>
+                    <div class="alert alert-danger" role="alert" invisible="not sunatfm_edi_last_error">
+                        <strong>Error del sistema:</strong>
+                        <field name="sunatfm_edi_last_error"
+                               string="Respuesta técnica completa (seleccione y copie)"
+                               nolabel="1" rows="30" colspan="2" widget="text"
+                               style="min-height: 240px; max-height: 600px; overflow: auto; white-space: pre-wrap; user-select: text;"/>
+                    </div>
+                    <div class="alert alert-info" role="alert" invisible="sunatfm_edi_last_error">
+                        El envío se realizará al ambiente SUNAT indicado en la configuración de la empresa.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SUNAT Peru E-Invoice">
+  <rect width="256" height="256" rx="32" fill="#714B67"/>
+  <path d="M56 48h92l52 52v108H56z" fill="#fff" opacity=".96"/>
+  <path d="M148 48v52h52" fill="none" stroke="#714B67" stroke-width="10"/>
+  <path d="M80 132h96M80 160h72M80 188h48" stroke="#714B67" stroke-width="12" stroke-linecap="round"/>
+</svg>

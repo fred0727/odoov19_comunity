@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Formato exclusivo de guía de remisión. El encabezado y pie se
+         heredan de sunatfm_report_layout.xml. -->
+    <template id="sunatfm_delivery_document">
+        <t t-set="doc" t-value="o.with_context(lang=o._get_report_lang())"/>
+        <t t-set="document_label" t-value="'GU&#205;A DE REMISI&#211;N ELECTR&#211;NICA'"/>
+        <!-- La identificación fiscal de la GRE no es la referencia logística
+             WH/OUT. Usamos el número asignado al preparar la GRE y dejamos la
+             referencia interna únicamente como respaldo para documentos aún
+             no preparados. -->
+        <t t-set="document_number" t-value="(doc.sunatfm_gre_number or doc.name or '').replace(' ', '')"/>
+        <t t-set="qr_image" t-value="doc.sunatfm_edi_qr_image()"/>
+        <div class="sunatfm_report">
+            <t t-call="sunatfm_pe_edi.sunatfm_document_header"/>
+            <div class="article">
+                <div style="font-family: Arial, sans-serif; font-size: 13px; line-height: 1.35; color: #111;">
+                    <style>
+                        .sunatfm_gre_info,
+                        .sunatfm_gre_info tbody,
+                        .sunatfm_gre_info tr,
+                        .sunatfm_gre_info td { border: 0 !important; border-style: none !important; outline: 0 !important; box-shadow: none !important; }
+                        .sunatfm_gre_info { border-collapse: separate !important; border-spacing: 0 !important; }
+                    </style>
+                    <table class="sunatfm_gre_info" style="width: 100%; margin-top: 10px; border-bottom: 1px solid #D8C6D2;">
+                        <tr>
+                            <td style="width: 50%; vertical-align: top; padding: 5px 0 8px;">
+                                <strong>Destinatario:</strong>
+                                <br/>
+                                <span t-out="doc.partner_id.name or ''"/>
+                                <br/>
+                                <strong>RUC:</strong>
+                                <span t-out="doc.partner_id.vat or ''"/>
+                            </td>
+                            <td style="width: 50%; vertical-align: top; padding: 5px 0 8px;">
+                                <strong>Fecha de inicio de traslado:</strong>
+                                <span t-out="doc.sunatfm_gre_fecha_inicio or doc.scheduled_date or ''"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding: 5px 0 2px;">
+                                <strong>Punto de partida:</strong>
+                                <span t-out="', '.join(filter(None, [doc.company_id.partner_id.street, doc.company_id.partner_id.street2, doc.company_id.partner_id.zip, doc.company_id.partner_id.city, doc.company_id.partner_id.state_id.name]))"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="padding: 2px 0 5px;">
+                                <strong>Punto de llegada:</strong>
+                                <span t-out="', '.join(filter(None, [doc.partner_id.street, doc.partner_id.street2, doc.partner_id.zip, doc.partner_id.city, doc.partner_id.state_id.name]))"/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 5px 0 8px;">
+                                <strong>Motivo del traslado:</strong>
+                                <span t-field="doc.sunatfm_gre_motivo_traslado"/>
+                            </td>
+                            <td style="padding: 5px 0 8px;">
+                                <strong>Modalidad de traslado:</strong>
+                                <span t-field="doc.sunatfm_gre_modalidad"/>
+                            </td>
+                        </tr>
+                    </table>
+                    <div style="font-weight: bold; border-bottom: 2px solid #714B67; margin: 15px 0 6px; padding-bottom: 3px;">DATOS DEL BIEN TRANSPORTADO</div>
+                    <t t-set="delivery_moves" t-value="doc.move_ids.filtered(lambda move: move.quantity or move.product_uom_qty)"/>
+                    <t t-set="show_lots" t-value="bool(delivery_moves.mapped('move_line_ids').filtered(lambda line: line.lot_id or line.lot_name))"/>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 4px; page-break-inside: auto;">
+                        <thead>
+                            <tr>
+                                <th style="width: 7%; text-align: center; color: #52364B; background: #F1E8EF; border: 1px solid #714B67; padding: 7px 4px;">Nro.</th>
+                                <th style="width: 13%; text-align: left; color: #52364B; background: #F1E8EF; border: 1px solid #714B67; padding: 7px 4px;">COD</th>
+                                <th t-att-style="('width: 36%;' if show_lots else 'width: 65%;') + ' text-align: left; color: #52364B; background: #F1E8EF; border: 1px solid #714B67; padding: 7px 4px;'">Producto</th>
+                                <th t-if="show_lots" style="width: 29%; text-align: left; color: #52364B; background: #F1E8EF; border: 1px solid #714B67; padding: 7px 4px;">N&#250;mero de serie/lote</th>
+                                <th style="width: 15%; text-align: right; color: #52364B; background: #F1E8EF; border: 1px solid #714B67; padding: 7px 4px;">Cantidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr t-foreach="delivery_moves" t-as="move" style="page-break-inside: auto; break-inside: auto;">
+                                <td style="border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: center; vertical-align: top;" t-out="move_index + 1"/>
+                                <td style="border-bottom: 1px solid #ddd; padding: 6px 4px; vertical-align: top;" t-out="move.product_id.product_tmpl_id.sunatfm_edi_sku or move.product_id.default_code or ''"/>
+                                <td style="border-bottom: 1px solid #ddd; padding: 6px 4px; vertical-align: top; height: auto !important; overflow: visible !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; overflow-wrap: anywhere; word-wrap: break-word;" t-out="move.product_id.display_name"/>
+                                <td t-if="show_lots" style="border-bottom: 1px solid #ddd; padding: 6px 4px; vertical-align: top;">
+                                    <t t-foreach="move.move_line_ids" t-as="line">
+                                        <span t-out="line.lot_id.name or line.lot_name or ''"/>
+                                        <br t-if="not line_last"/>
+                                    </t>
+                                </td>
+                                <td style="border-bottom: 1px solid #ddd; padding: 6px 4px; text-align: right; vertical-align: top;">
+                                    <span t-out="move.quantity or move.product_uom_qty"/>
+                                    <span t-out="move.product_uom.name or ''"/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="font-weight: bold; border-bottom: 2px solid #714B67; margin: 20px 0 6px; padding-bottom: 3px;">DATOS DE LA UNIDAD DE TRANSPORTE Y TRANSPORTISTA</div>
+                    <div style="background: #FBF8FA; border: 1px solid #714B67; border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; line-height: 1.6; page-break-inside: avoid;">
+                        <strong>VEH&#205;CULO:</strong>
+                        <span t-out="doc.sunatfm_gre_vehicle_id.name or ''"/>
+                        <span style="padding-left: 25px;">
+                            <strong>PLACA:</strong>
+                            <span t-out="doc.sunatfm_gre_vehiculo_placa or ''"/></span>
+                        <br/>
+                        <strong>DENOMINACI&#211;N:</strong>
+                        <span t-out="doc.sunatfm_gre_conductor_id.name or doc.sunatfm_gre_transportista_id.name or ''"/>
+                        <br/>
+                        <strong>DNI / LICENCIA:</strong>
+                        <span t-out="doc.sunatfm_gre_conductor_licencia or ''"/>
+                    </div>
+                    <div style="background: #FBF8FA; border: 1px solid #714B67; border-radius: 8px; padding: 10px 12px; margin: 0 0 12px; line-height: 1.5; page-break-inside: avoid;">
+                        <strong>Peso bruto total:</strong>
+                        <span t-out="doc.sunatfm_gre_peso_bruto or 0"/>
+                        <span t-field="doc.sunatfm_gre_unidad_peso"/>
+                        <br/>
+                        <strong>N&#250;mero de bultos:</strong>
+                        <span t-out="doc.sunatfm_gre_numero_bultos or 0"/>
+                        <br/>
+                        <strong>Documentos relacionados:</strong>
+                        <t t-if="doc.sunatfm_gre_reference_ids">
+                            <t t-foreach="doc.sunatfm_gre_reference_ids" t-as="reference">
+                                <span t-out="reference.document_number"/>
+                                <t t-if="not reference_last">, </t>
+                            </t>
+                        </t>
+                        <span t-if="not doc.sunatfm_gre_reference_ids">—</span>
+                    </div>
+                    <div t-if="doc.sunatfm_gre_observations or doc.note" style="background: #FBF8FA; border-left: 3px solid #714B67; padding: 7px 10px; margin: 0 0 10px; page-break-inside: avoid;">
+                        <strong>Observaciones:</strong>
+                        <span t-out="doc.sunatfm_gre_observations or doc.note or ''"/>
+                    </div>
+                    <div t-if="qr_image" style="margin: 12px 0; text-align: left; page-break-inside: avoid;">
+                        <div style="display: inline-block; border: 1px solid #714B67; border-radius: 8px; padding: 7px; text-align: center; background: #fff;">
+                            <img t-att-src="'data:image/png;base64,%s' % qr_image" style="width: 105px; height: 105px;" alt="C&#243;digo QR de verificaci&#243;n SUNAT"/>
+                            <!-- <div style="font-size: 10px; margin-top: 3px;">Consulta SUNAT</div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <t t-call="sunatfm_pe_edi.sunatfm_document_footer"/>
+        </div>
+    </template>
+    <template id="sunatfm_stock_report_deliveryslip" inherit_id="stock.report_deliveryslip">
+        <xpath expr="//t[@t-call='stock.report_delivery_document']" position="replace">
+            <t t-call="web.html_container">
+                <t t-call="sunatfm_pe_edi.sunatfm_delivery_document" t-lang="o._get_report_lang()"/>
+            </t>
+        </xpath>
+    </template>
+    <!-- Nombre del archivo descargado: usar la numeración fiscal GRE cuando
+         ya fue asignada; antes de generarla se conserva la referencia interna. -->
+    <record id="stock.action_report_delivery" model="ir.actions.report">
+        <field name="print_report_name">object.sunatfm_gre_number or object.name</field>
+    </record>
+</odoo>

@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Formato comercial de cotización. Se mantiene dentro del módulo propio
+         y hereda el reporte estándar de Ventas de Odoo 19. -->
+    <template id="sunatfm_saleorder_document" inherit_id="sale.report_saleorder_document">
+        <xpath expr="//t[@t-call='web.external_layout']" position="replace">
+            <div class="sunatfm_report">
+                <t t-set="doc" t-value="doc.with_context(lang='es_PE')"/>
+                <t t-set="document_label" t-value="'COTIZACI&#211;N'"/>
+                <t t-set="document_number" t-value="doc.name or ''"/>
+                <t t-call="sunatfm_pe_edi.sunatfm_document_header"/>
+                <div class="article page sunatfm_quote" style="font-family: Arial, sans-serif; font-size: 12px; color: #111;">
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+                    <style>
+                    .sunatfm_quote { padding-bottom: 25px; line-height: 1.35; }
+                    .sunatfm_quote table { width: 100%; border-collapse: collapse; }
+                    .sunatfm_quote .info-box { background: #FBF8FA; border: 1px solid #C9B3C2; border-radius: 8px; padding: 10px; min-height: 75px; }
+                    .sunatfm_quote .info-box table,
+                    .sunatfm_quote .info-box tr,
+                    .sunatfm_quote .info-box td { border: 0 !important; }
+                    .sunatfm_quote > table:first-of-type,
+                    .sunatfm_quote > table:first-of-type tbody,
+                    .sunatfm_quote > table:first-of-type tr,
+                    .sunatfm_quote > table:first-of-type td,
+                    .sunatfm_quote .info-box > table,
+                    .sunatfm_quote .info-box > table tbody,
+                    .sunatfm_quote .info-box > table tr,
+                    .sunatfm_quote .info-box > table td {
+                        border: 0 !important;
+                        border-style: none !important;
+                        outline: 0 !important;
+                        box-shadow: none !important;
+                    }
+                    .sunatfm_quote .info-box > table { border-collapse: separate !important; border-spacing: 0 !important; }
+                    .sunatfm_quote .info-box td { padding: 3px 0; vertical-align: top; }
+                    .sunatfm_quote .info-label { font-weight: bold; width: 130px; white-space: nowrap; }
+                    .sunatfm_quote .lines { margin-top: 14px; }
+                    /* El encabezado de columnas se muestra solo en la primera página. */
+                    .sunatfm_quote .lines thead { display: table-row-group; }
+                    .sunatfm_quote .lines th { background: #F1E8EF; border: 1px solid #C9B3C2; border-bottom: 2px solid #714B67; padding: 8px 5px; font-weight: bold; }
+                    .sunatfm_quote .lines th:first-child { border-radius: 8px 0 0 8px; }
+                    .sunatfm_quote .lines th:last-child { border-radius: 0 8px 8px 0; }
+                    .sunatfm_quote .lines td { border-bottom: 1px solid #E2D9DF; padding: 7px 5px; vertical-align: top; }
+                    /* wkhtmltopdf suele heredar page-break-inside: avoid de Bootstrap
+                       para las filas. Forzamos la fila y sus celdas a poder partirse. */
+                    .sunatfm_quote .lines { page-break-inside: auto !important; }
+                    .sunatfm_quote .lines tbody { display: table-row-group; }
+                    .sunatfm_quote .lines tr { display: table-row !important; height: auto !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; }
+                    .sunatfm_quote .lines td { height: auto !important; overflow: visible !important; page-break-inside: auto !important; -webkit-column-break-inside: auto !important; break-inside: auto !important; }
+                    .sunatfm_quote .lines .line-description { white-space: pre-wrap; overflow-wrap: anywhere; word-wrap: break-word; }
+                    .sunatfm_quote .lines .line-description-extra { display: block; margin-top: 4px; white-space: pre-wrap; }
+                    .sunatfm_quote .lines-body { margin-top: 0; }
+                    .sunatfm_quote .line-row { display: block; width: 100%; min-height: 0; page-break-inside: auto; break-inside: auto; overflow: visible; border-bottom: 1px solid #E2D9DF; }
+                    .sunatfm_quote .line-row:after { content: ''; display: block; clear: both; }
+                    .sunatfm_quote .line-cell { float: left; box-sizing: border-box; border-bottom: 0; padding: 3px 5px; vertical-align: top; min-height: 0; }
+                    .sunatfm_quote .lines-body .line-description { display: block; min-height: 0; line-height: 1.25; }
+                    .sunatfm_quote .lines-body .product-image { display: block !important; width: 60px !important; height: 72px !important; max-width: 60px !important; max-height: 72px !important; object-fit: cover !important; object-position: center center; margin: 5px auto 0; }
+                    .sunatfm_quote .lines-body .line-description-extra { display: block; margin-top: 4px; white-space: pre-wrap; }
+                    .sunatfm_quote .lines .product-image { display: block; width: 60px; height: 72px; max-width: 60px; max-height: 72px; margin-top: 5px; object-fit: cover; object-position: center center; }
+                    .sunatfm_quote .lines tbody tr:nth-child(even) td { background: #FBF8FA; }
+                    .sunatfm_quote .right { text-align: right; }
+                    .sunatfm_quote .center { text-align: center; }
+                    .sunatfm_quote .totals { width: 38%; margin-left: auto; margin-top: 14px; }
+                    .sunatfm_quote .totals,
+                    .sunatfm_quote .totals tr,
+                    .sunatfm_quote .totals td { border: 0 !important; border-style: none !important; outline: 0 !important; box-shadow: none !important; }
+                    .sunatfm_quote .totals { border-collapse: separate !important; border-spacing: 0 !important; }
+                    .sunatfm_quote .totals td { padding: 3px 6px; line-height: 1.15; }
+                    .sunatfm_quote .totals .total-row { font-weight: bold; }
+                    .sunatfm_quote .totals .total-row td { border-top: 2px solid #714B67 !important; }
+                    .sunatfm_quote .amount-words { border: 1px solid #aaa; border-radius: 8px; padding: 8px 12px; margin-top: 12px; }
+                    .sunatfm_quote .sunatfm_totals_block,
+                    .sunatfm_quote .sunatfm_closing_block { page-break-inside: avoid; break-inside: avoid; }
+                    .sunatfm_quote .notes { margin-top: 14px; line-height: 1.4; }
+                    .sunatfm_quote .notes strong { font-weight: bold; }
+                    .sunatfm_quote .conditions { margin-left: 0px; line-height: 1.4; }
+                </style>
+                    <t t-set="company_partner" t-value="doc.company_id.partner_id"/>
+                    <t t-set="customer" t-value="doc.partner_id"/>
+                    <t t-set="customer_company" t-value="customer.commercial_partner_id"/>
+                    <t t-set="customer_contact" t-value="customer.name if customer != customer_company else customer_company.name"/>
+                    <t t-set="detraction_lines" t-value="doc.order_line.filtered(lambda line: line.product_id and line.product_id.product_tmpl_id.sunatfm_edi_detraction_id)"/>
+                    <t t-set="detraction_banks" t-value="doc.company_id.partner_id.bank_ids.filtered(lambda bank: bank.sunatfm_edi_detraction_account)"/>
+                    <t t-set="normal_banks" t-value="doc.company_id.partner_id.bank_ids.filtered(lambda bank: not bank.sunatfm_edi_detraction_account)"/>
+                    <t t-set="tax_groups" t-value="((doc.tax_totals or {}).get('subtotals') or [{}])[0].get('tax_groups', [])"/>
+                    <table>
+                        <tr>
+                            <td style="width: 62%; padding-right: 6px; vertical-align: top;">
+                                <div class="info-box">
+                                    <table>
+                                        <tr>
+                                            <td class="info-label">CLIENTE</td>
+                                            <td t-out="customer_company.name"/>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">RUC</td>
+                                            <td t-out="customer_company.vat or ''"/>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">DIRECCI&#211;N</td>
+                                            <td>
+                                                <span t-out="customer_company.street or ''"/>
+                                                <t t-if="customer_company.street2">
+                                                    <span t-out="' ' + customer_company.street2"/>
+                                                </t>
+                                                <t t-if="customer_company.city">
+                                                    <span t-out="', ' + customer_company.city"/>
+                                                </t>
+                                                <t t-if="customer_company.state_id">
+                                                    <span t-out="' - ' + customer_company.state_id.name"/>
+                                                </t>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">DESCRIPCI&#211;N:</td>
+                                            <td t-out="doc.sale_description or ''"/>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                            <td style="width: 38%; padding-left: 0; vertical-align: top;">
+                                <div class="info-box">
+                                    <table>
+                                        <tr>
+                                            <td class="info-label">FECHA EMISI&#211;N</td>
+                                            <td>:
+                                                <span t-field="doc.date_order" t-options="{'widget': 'date'}"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">FECHA VENC.</td>
+                                            <td>:
+                                                <span t-if="doc.validity_date" t-field="doc.validity_date"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">MONEDA</td>
+                                            <td>:
+                                                <span t-out="doc.currency_id.name == 'PEN' and 'SOLES' or doc.currency_id.name"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="info-label">CONTACTO</td>
+                                            <td t-out="customer_contact"/>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <t t-set="has_discount" t-value="any((line.discount or 0.0) &gt; 0.0 for line in doc.order_line if not line.display_type)"/>
+                    <table class="lines lines-header">
+                        <thead>
+                            <tr>
+                                <th class="center" style="width: 8%; font-weight: bold;">CANT.</th>
+                                <th class="center" style="width: 8%; font-weight: bold;">UM</th>
+                                <th t-att-style="'width:49%; font-weight:bold;' if has_discount else 'width:53%; font-weight:bold;'">DESCRIPCI&#211;N</th>
+                                <th class="right" style="width: 10%; font-weight: bold;">V/U</th>
+                                <th t-if="has_discount" class="right" style="width: 8%; font-weight: bold;">DESC.</th>
+                                <th class="right" style="width: 10%; font-weight: bold;">P/U</th>
+                                <th class="right" style="width: 11%; font-weight: bold;">IMPORTE</th>
+                            </tr>
+                        </thead>
+                    </table>
+                    <div class="lines-body">
+                        <t t-foreach="doc._get_order_lines_to_report()" t-as="line">
+                            <t t-if="not line.display_type">
+                                <t t-set="line_description" t-value="line.name or ''"/>
+                                <t t-set="product_name" t-value="line.product_id.display_name or ''"/>
+                                <div class="line-row">
+                                    <div class="line-cell center" style="width: 8%;">
+                                        <span t-field="line.product_uom_qty"/>
+                                    </div>
+                                    <div class="line-cell center" style="width: 8%;">
+                                        <span t-out="line.product_uom_id.name or ''"/>
+                                    </div>
+                                    <div class="line-cell line-description" t-att-style="'width:49%;' if has_discount else 'width:53%;'">
+                                        <span class="line-description" t-out="product_name or line_description"/>
+                                        <img t-if="line.product_id.image_128" class="product-image" t-att-src="image_data_uri(line.product_id.image_128)" alt="Imagen del producto"/>
+                                        <span t-if="line_description and line_description != product_name" class="line-description-extra" t-out="line_description[len(product_name):].lstrip() if product_name and line_description.startswith(product_name) else line_description"/>
+                                    </div>
+                                    <div class="line-cell right" style="width: 10%;">
+                                        <span t-out="line.tax_ids.compute_all(line.price_unit, currency=doc.currency_id, quantity=1).get('total_excluded', line.price_unit)" t-options="{'widget': 'float', 'precision': 2}"/>
+                                    </div>
+                                    <div t-if="has_discount" class="line-cell right" style="width: 8%;">
+                                        <span t-out="'{:.2f} %'.format(line.discount or 0.0)"/>
+                                    </div>
+                                    <div class="line-cell right" style="width: 10%;">
+                                        <span t-out="line.price_reduce_taxinc" t-options="{'widget': 'float', 'precision': 2}"/>
+                                    </div>
+                                    <div class="line-cell right" style="width: 11%;">
+                                        <span t-field="line.price_total" t-options="{'widget': 'float', 'precision': 2}"/>
+                                    </div>
+                                </div>
+                            </t>
+                            <t t-else="">
+                                <div class="line-row" style="background-color: #f1f1f1;">
+                                    <div class="line-cell" style="width: 100%; background-color: #f1f1f1;">
+                                        <span style="font-weight: bold;" t-field="line.name"/>
+                                    </div>
+                                </div>
+                            </t>
+                        </t>
+                    </div>
+                    <div class="sunatfm_totals_block">
+                        <table class="totals">
+                            <tr>
+                                <td>INAFECTA</td>
+                                <td>S/</td>
+                                <td class="right">
+                                    <span t-out="0.0" t-options="{'widget': 'float', 'precision': 2}"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GRAVADA</td>
+                                <td t-out="doc.currency_id.symbol"/>
+                                <td class="right">
+                                    <span t-field="doc.amount_untaxed" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                </td>
+                            </tr>
+                            <tr t-foreach="tax_groups" t-as="tax_group">
+                                <t t-set="group_taxes" t-value="doc.env['account.tax'].browse(tax_group.get('involved_tax_ids', []))"/>
+                                <td>
+                                    <span t-out="tax_group.get('group_name') or 'IMPUESTO'"/>
+                                    <span t-if="group_taxes" t-out="' ' + str(round(abs(group_taxes[0].amount), 2)) + '%'"/>
+                                </td>
+                                <td t-out="doc.currency_id.symbol"/>
+                                <td class="right">
+                                    <span t-out="tax_group.get('tax_amount_currency', 0.0)" t-options="{'widget': 'float', 'precision': 2}"/>
+                                </td>
+                            </tr>
+                            <tr t-if="not tax_groups">
+                                <td>IMPUESTOS</td>
+                                <td t-out="doc.currency_id.symbol"/>
+                                <td class="right">
+                                    <span t-out="0.0" t-options="{'widget': 'float', 'precision': 2}"/>
+                                </td>
+                            </tr>
+                            <tr class="total-row">
+                                <td>TOTAL</td>
+                                <td t-out="doc.currency_id.symbol"/>
+                                <td class="right">
+                                    <span t-field="doc.amount_total" t-options="{'widget': 'monetary', 'display_currency': doc.currency_id}"/>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="amount-words">
+                            <strong>IMPORTE EN LETRAS:</strong>
+                            <span t-out="doc.currency_id.amount_to_text(doc.amount_total).upper()"/>
+                        </div>
+                    </div>
+                    <div class="sunatfm_closing_block">
+                        <div class="notes">
+                            <strong>OBSERVACIONES:</strong>
+                            <div style="margin-left: 80px;">
+                                <div>
+                                    <strong>CONDICIONES DE PAGO</strong> :
+                                    <span t-out="doc.payment_term_id.name or 'Contado'"/>
+                                </div>
+                                <div>
+                                    <strong>VALIDEZ DE LA PRESENTE</strong> :
+                                    <span t-out="doc.validity_date or ''"/>
+                                </div>
+                                <div>
+                                    <strong>TIEMPO DE ENTREGA</strong> :
+                                    <span t-out="doc.commitment_date or ''"/>
+                                </div>
+                                <div>
+                                    <strong>ANEXO</strong> :
+                                    <span t-out="doc.client_order_ref or ''"/>
+                                </div>
+                                <div t-if="doc.note">
+                                    <strong>OBSERVACIONES</strong> :
+                                    <span t-field="doc.note"/>
+                                </div>
+                            </div>
+                        </div>
+                        <div t-if="detraction_lines" class="notes">
+                            <strong>Operaci&#243;n sujeta al Sistema de Pago de Obligaciones Tributarias:</strong>&#160;
+                            <strong>BANCO DE LA NACI&#211;N:</strong>
+                            <t t-foreach="detraction_banks" t-as="bank">
+                                <span> CTA. DETRACCI&#211;N N&#186;
+                                    <span t-out="bank.acc_number"/></span>
+                            </t>
+                        </div>
+                        <div class="notes">
+                            <strong>Cuentas Bancarias:</strong>
+                            <t t-foreach="normal_banks" t-as="bank">
+                                <span>
+                            Cuenta Cte
+                                    <span t-out="bank.bank_id.name or 'Banco'"/>:
+                                    <span t-out="bank.acc_number"/>
+                                    <t t-if="bank.sunatfm_edi_cci"> &#160;&#160; CCI:
+                                        <span t-out="bank.sunatfm_edi_cci"/>
+                                    </t>
+                            &#160;&#160;
+                                </span>
+                            </t>
+                        </div>
+                        <div class="notes conditions">
+                            <div>Horario de entrega de Lunes a Viernes de 8:00 a.m a 6:00 p.m y los S&#225;bados de 8:00 a.m a 12:00 p.m.</div>
+                            <div>Solo incluye las partidas descritas, Cualquier cambio o modificaci&#243;n del material o servicio a suministrar será conciderado como adicional.</div>
+                            <div>Cliente proporcionar&#225; facilidades de Operaci&#243;n.</div>
+                        </div>
+                    </div>
+                </div>
+                <t t-call="sunatfm_pe_edi.sunatfm_document_footer"/>
+            </div>
+        </xpath>
+    </template>
+</odoo>
