@@ -6,7 +6,7 @@
     "author": "Freddy Aldair Muñoz Huasasquiche",
     "support": "freddymunoz.dev@gmail.com",
     "license": "LGPL-3",
-    "price": 149.00,
+    "price": 85.00,
     "currency": "USD",
     "description": """
 SUNAT Peru E-Invoice adds electronic invoicing workflows for Odoo 19 Community.
